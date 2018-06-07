@@ -1,0 +1,54 @@
+HOW TO SET UP RUST FOR STM32F103 bluepill board on windows
+(the outdated parts are commented out with '//')
+
+sources:
+	https://japaric.github.io/discovery/03-setup/README.html
+	https://japaric.github.io/discovery/03-setup/windows.html
+	https://docs.rs/cortex-m-quickstart/0.1.8/cortex_m_quickstart/
+	https://japaric.github.io/blue-pill/blue_pill/
+	https://docs.rs/svd2rust/0.7.2/svd2rust/
+	http://blog.japaric.io/rtfm-v2/
+
+preparation:
+  install arm toolchain - arm-none-eabi-gcc //check add to the path during install
+  install OpenOCD //manually add to the path
+  install PuTTY //add to the path
+  //install CMake (cargo-edit or cargo-clone installation depends on this)
+  install ST-LINK USB driver ?
+  download https://github.com/japaric/stm32f103xx-hal
+
+rust preparation:
+  //?rustup default nightly
+  //cargo install xargo --vers 0.3.8 -f
+  //cargo install itm
+  //cargo install cargo-clone
+  //cargo install cargo-edit
+  //rustup component add rust-src
+  rustup target add thumbv7m-none-eabi
+
+//for this project so this is not needed:
+prepare project:
+  cargo add stm32f103xx
+  cargo add stm32f103xx-hal --git https://github.com/japaric/stm32f103xx-hal
+  copy memory.x from https://github.com/japaric/stm32f103xx-hal
+  copy build.rs from https://github.com/japaric/stm32f103xx-hal
+  copy Xargo.toml from https://github.com/japaric/stm32f103xx-hal
+  copy stm32f1x.cfg from openOCD
+  copy stlink-v2.cfg from openOCD
+
+check the output:
+  arm-none-eabi-readelf -A target\thumbv7m-none-eabi\debug\<targetname>
+
+for programming or debugging:
+   openocd -f "stlink-v2.cfg" -f "stm32f1x.cfg"
+   or use ocd.bat to start OpenOCD with board and programmer specific config files, leave the terminal open
+     
+the debugger will auto load the .gdbinit if the HOME env variable is set and there is an other .gdbinit with "allowing" content (set auto-load safe-path c:\_projects\stm32f103xx-hal\.gdbinit)
+  in powershell: $env:HOME = "C"
+  in commandprompt: set HOME=%HOMEPATH%
+
+then start a debug session:
+  arm-none-eabi-gdb target\thumbv7m-none-eabi\debug\<targetname>
+
+or flash and run an example:
+  cargo run --release --example <example_name>

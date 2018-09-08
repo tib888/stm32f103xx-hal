@@ -114,4 +114,12 @@ impl Instant {
     pub fn elapsed(&self) -> u32 {
         DWT::get_cycle_count().wrapping_sub(self.now)
     }
+
+    pub fn elapsed_till(&self, till: &Self) -> u32 {
+        till.now.wrapping_sub(self.now)
+    }
+
+    pub fn elapsed_since(&self, since: &Self) -> u32 {
+        self.now.wrapping_sub(since.now)
+    }
 }

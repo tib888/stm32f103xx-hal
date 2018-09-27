@@ -18,7 +18,7 @@ use nb;
 use rcc::APB1;
 use stm32f103xx::{CAN, USB};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, PartialOrd, Eq, Ord)]
 pub struct Id {
     // standard part: 0xFFE00000 //11 valid bits
     // extended part: 0xFFFFFFF8 //11+18 vaild bits
@@ -81,7 +81,8 @@ impl Id {
 
     fn as_16bit_filter(&self) -> u32 {
         // [31:0] = stdid[10:0], IDE, RTR, extid[17:15]
-        ((self.raw & 0b11111111111000000000000000000000) >> 16) | ((self.raw & 0b1100) << 1)
+        ((self.raw & 0b11111111111000000000000000000000) >> 16)
+            | ((self.raw & 0b1100) << 1)
             | ((self.raw & 0b111000000000000000000) >> 18)
     }
 }
@@ -730,15 +731,15 @@ pub fn recommend_transmitter() -> TxMailBoxIndex {
 
 macro_rules! TxMailBox {
     ($CANX:ident, [
-        $($TxMailBoxi:ident: ($i:expr, $tmei:ident, $lowi:ident, $terri:ident, 
-        $alsti:ident, $txoki:ident, $rqcpi:ident, $abrqi:ident, $can_tiir:ident, 
+        $($TxMailBoxi:ident: ($i:expr, $tmei:ident, $lowi:ident, $terri:ident,
+        $alsti:ident, $txoki:ident, $rqcpi:ident, $abrqi:ident, $can_tiir:ident,
         $can_tdtir:ident, $can_tdlir:ident, $can_tdhir:ident),)+
     ]) => {
         $(
             //type state
             pub struct $TxMailBoxi;
 
-            impl TransmitMailbox for TxMailBox<$CANX, $TxMailBoxi> 
+            impl TransmitMailbox for TxMailBox<$CANX, $TxMailBoxi>
             {
                 const INDEX: TxMailBoxIndex = $i;
 
@@ -782,27 +783,27 @@ macro_rules! TxMailBox {
                     tsr.$rqcpi().bit_is_set()
                 }
 
-                fn request_abort_transmit(&mut self) { 
+                fn request_abort_transmit(&mut self) {
                     unsafe { (*$CANX::ptr()).can_tsr.write(|w| w.$abrqi().set_bit()); }
                 }
 
                 //TODO non blocking on the top of this:
                 //TODO use a message struct as input
-                fn request_transmit(&mut self, frame: &Frame) -> Result<(), Error> { 
+                fn request_transmit(&mut self, frame: &Frame) -> Result<(), Error> {
                     if self.is_empty() {
                         if frame.data.dlc > 8 {
                             return Err(Error::TooLongPayload);
                         }
 
                         //fill message length [0..8]
-                        unsafe { (*$CANX::ptr()).$can_tdtir.write(|w| 
+                        unsafe { (*$CANX::ptr()).$can_tdtir.write(|w|
                             w
-                            .dlc().bits(frame.data.dlc)); 
+                            .dlc().bits(frame.data.dlc));
                         }
 
                         unsafe { (*$CANX::ptr()).$can_tdlir.write(|w| w.bits(frame.data.data_low)); }
                         unsafe { (*$CANX::ptr()).$can_tdhir.write(|w| w.bits(frame.data.data_high)); }
-                        
+
                         // Bits 31:21 STID[10:0]: Standard Identifier
                         //             The standard part of the identifier.
                         // Bit 20:3 EXID[17:0]: Extended Identifier
@@ -818,7 +819,7 @@ macro_rules! TxMailBox {
                         //             Set by software to request the transmission for the corresponding mailbox.
                         //             Cleared by hardware when the mailbox becomes empty.
                         let id = &frame.id;
-                        unsafe { (*$CANX::ptr()).$can_tiir.write(|w| 
+                        unsafe { (*$CANX::ptr()).$can_tiir.write(|w|
                             w
                             .stid().bits(id.standard())
                             .exid().bits(id.extended_part())
@@ -828,7 +829,7 @@ macro_rules! TxMailBox {
                         }
                         Ok(())
                     } else {
-                        //this mailbox is not empty, so return the index of the less  
+                        //this mailbox is not empty, so return the index of the less
                         //important mailbox as candidate for request_abort_transmit
                         Err(Error::NotEmptyTxMailBox)
                     }
@@ -864,7 +865,7 @@ pub struct RxFifo<CAN, IDX> {
 
 macro_rules! RxFifo {
     ($CANX:ident, [
-        $($RxFifoi:ident: ($i:expr, 
+        $($RxFifoi:ident: ($i:expr,
         $can_rfir:ident, $rfomi:ident, $fovri:ident, $fulli:ident, $fmpi:ident,
         $can_riir:ident, $can_rdtir:ident, $can_rdlir:ident, $can_rdhir:ident),)+
     ]) => {
@@ -884,9 +885,9 @@ macro_rules! RxFifo {
                 }
 
                 fn pending_count(&self) -> u8 {
-                     unsafe { (*$CANX::ptr()).$can_rfir.read().$fmpi().bits() } 
+                     unsafe { (*$CANX::ptr()).$can_rfir.read().$fmpi().bits() }
                 }
-            
+
                 fn read(&mut self) -> nb::Result<(FilterMatchIndex, TimeStamp, Frame), !> {
                     let n = self.pending_count();
                     if n < 1 {
@@ -897,7 +898,7 @@ macro_rules! RxFifo {
                         let filter_match_index = rdtir.fmi().bits();
                         let time = rdtir.time().bits();
 
-                        let frame = Frame { 
+                        let frame = Frame {
                             id: Id::from_received_register(unsafe { (*$CANX::ptr()).$can_riir.read().bits() }),
                             data: Payload {
                                 dlc: rdtir.dlc().bits(),
@@ -905,7 +906,7 @@ macro_rules! RxFifo {
                                 data_high: unsafe { (*$CANX::ptr()).$can_rdhir.read().bits() },
                             },
                         };
-                        
+
                         //after every info captured release fifo output mailbox:
                         unsafe { (*$CANX::ptr()).$can_rfir.write(|w| w.$rfomi().set_bit()) };
 

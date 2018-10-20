@@ -59,7 +59,7 @@ macro_rules! gpio {
                 Alternate, Floating, GpioExt, Input,
                 OpenDrain,
                 Output,
-                PullDown, 
+                PullDown,
                 PullUp,
                 PushPull,
             };
@@ -301,15 +301,9 @@ macro_rules! gpio {
                         cr: &mut $CR,
                     ) -> $PXi<Output<OpenDrain>> {
                         let offset = (4 * $i) % 32;
-<<<<<<< HEAD
-                        // General purpose output push-pull
-                        let cnf = 0b01;
-                        // Output mode, max speed 50 MHz
-=======
                         // General purpose output open-drain
                         let cnf = 0b01;
                         // Open-Drain Output mode, max speed 50 MHz
->>>>>>> refs/remotes/japaric/master
                         let mode = 0b11;
                         let bits = (cnf << 2) | mode;
 
@@ -381,8 +375,6 @@ macro_rules! gpio {
                 }
 
                 impl<MODE> toggleable::Default for $PXi<Output<MODE>> {}
-<<<<<<< HEAD
-=======
 
                 impl<MODE> OutputPin for $PXi<Alternate<MODE>> {
                     fn set_high(&mut self) {
@@ -406,7 +398,6 @@ macro_rules! gpio {
                         unsafe { (*$GPIOX::ptr()).odr.read().bits() & (1 << $i) == 0 }
                     }
                 }
->>>>>>> refs/remotes/japaric/master
 
                 impl<MODE> InputPin for $PXi<Input<MODE>> {
                     fn is_high(&self) -> bool {

@@ -59,7 +59,7 @@ macro_rules! gpio {
                 Alternate, Floating, GpioExt, Input,
                 OpenDrain,
                 Output,
-                PullDown, 
+                PullDown,
                 PullUp,
                 PushPull,
             };
@@ -136,6 +136,17 @@ macro_rules! gpio {
                 }
             }
 
+            impl<MODE> InputPin for $PXx<Input<MODE>> {
+                fn is_high(&self) -> bool {
+                    !self.is_low()
+                }
+
+                fn is_low(&self) -> bool {
+                    // NOTE(unsafe) atomic read with no side effects
+                    unsafe { (*$GPIOX::ptr()).idr.read().bits() & (1 << self.i) == 0 }
+                }
+            }
+
             impl <MODE> StatefulOutputPin for $PXx<Output<MODE>> {
                 fn is_set_high(&self) -> bool {
                     !self.is_set_low()
@@ -148,6 +159,17 @@ macro_rules! gpio {
             }
 
             impl <MODE> toggleable::Default for $PXx<Output<MODE>> {}
+
+            impl InputPin for $PXx<Output<OpenDrain>> {
+                fn is_high(&self) -> bool {
+                    !self.is_low()
+                }
+
+                fn is_low(&self) -> bool {
+                    // NOTE(unsafe) atomic read with no side effects
+                    unsafe { (*$GPIOX::ptr()).idr.read().bits() & (1 << self.i) == 0 }
+                }
+            }
 
             $(
                 /// Pin
@@ -164,6 +186,27 @@ macro_rules! gpio {
                         let offset = (4 * $i) % 32;
                         // Alternate function output push pull
                         let cnf = 0b10;
+                        // Output mode, max speed 50 MHz
+                        let mode = 0b11;
+                        let bits = (cnf << 2) | mode;
+
+                        // input mode
+                        cr
+                            .cr()
+                            .modify(|r, w| unsafe {
+                                w.bits((r.bits() & !(0b1111 << offset)) | (bits << offset))
+                            });
+
+                        $PXi { _mode: PhantomData }
+                    }
+
+                    pub fn into_alternate_open_drain(
+                        self,
+                        cr: &mut $CR,
+                    ) -> $PXi<Alternate<OpenDrain>> {
+                        let offset = (4 * $i) % 32;
+                        // Alternate function output open drain
+                        let cnf = 0b11;
                         // Output mode, max speed 50 MHz
                         let mode = 0b11;
                         let bits = (cnf << 2) | mode;
@@ -258,9 +301,9 @@ macro_rules! gpio {
                         cr: &mut $CR,
                     ) -> $PXi<Output<OpenDrain>> {
                         let offset = (4 * $i) % 32;
-                        // General purpose output push-pull
+                        // General purpose output open-drain
                         let cnf = 0b01;
-                        // Output mode, max speed 50 MHz
+                        // Open-Drain Output mode, max speed 50 MHz
                         let mode = 0b11;
                         let bits = (cnf << 2) | mode;
 
@@ -295,12 +338,12 @@ macro_rules! gpio {
                     }
                 }
 
-                impl<MODE> $PXi<Output<MODE>> {
+                impl<MODE> $PXi<MODE> {
                     /// Erases the pin number from the type
                     ///
                     /// This is useful when you want to collect the pins into an array where you
                     /// need all the elements to have the same type
-                    pub fn downgrade(self) -> $PXx<Output<MODE>> {
+                    pub fn downgrade(self) -> $PXx<MODE> {
                         $PXx {
                             i: $i,
                             _mode: self._mode,
@@ -332,6 +375,29 @@ macro_rules! gpio {
                 }
 
                 impl<MODE> toggleable::Default for $PXi<Output<MODE>> {}
+
+                impl<MODE> OutputPin for $PXi<Alternate<MODE>> {
+                    fn set_high(&mut self) {
+                        // NOTE(unsafe) atomic write to a stateless register
+                        unsafe { (*$GPIOX::ptr()).bsrr.write(|w| w.bits(1 << $i)) }
+                    }
+
+                    fn set_low(&mut self) {
+                        // NOTE(unsafe) atomic write to a stateless register
+                        unsafe { (*$GPIOX::ptr()).bsrr.write(|w| w.bits(1 << (16 + $i))) }
+                    }
+                }
+
+                impl<MODE> StatefulOutputPin for $PXi<Alternate<MODE>> {
+                    fn is_set_high(&self) -> bool {
+                        !self.is_set_low()
+                    }
+
+                    fn is_set_low(&self) -> bool {
+                        // NOTE(unsafe) atomic read with no side effects
+                        unsafe { (*$GPIOX::ptr()).odr.read().bits() & (1 << $i) == 0 }
+                    }
+                }
 
                 impl<MODE> InputPin for $PXi<Input<MODE>> {
                     fn is_high(&self) -> bool {

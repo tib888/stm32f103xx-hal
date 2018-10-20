@@ -35,8 +35,6 @@
 //!
 //! [examples]: examples/index.html
 
-#![feature(unsize)]
-#![feature(never_type)]
 #![no_std]
 
 extern crate cast;
@@ -55,6 +53,7 @@ pub mod dma;
 pub mod examples;
 pub mod flash;
 pub mod gpio;
+pub mod i2c;
 pub mod prelude;
 pub mod pwm;
 pub mod qei;

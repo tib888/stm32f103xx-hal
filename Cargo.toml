@@ -9,12 +9,19 @@ repository = "https://github.com/japaric/stm32f103xx-hal"
 version = "0.1.0"
 
 [dependencies]
+<<<<<<< HEAD
 cortex-m = "0.5.2"
 nb = "0.1.1"
 stm32f103xx = "0.10.0"
 cortex-m-rt = "0.5.1"
 panic-semihosting = "0.5.0"
 panic-itm = "0.2.0"
+=======
+cortex-m = "0.5.7"
+nb = "0.1.1"
+stm32f103xx = "0.10.0"
+cortex-m-rt = "0.6.3"
+>>>>>>> refs/remotes/japaric/master
 
 [dependencies.void]
 default-features = false
@@ -26,11 +33,18 @@ version = "0.2.2"
 
 [dependencies.embedded-hal]
 features = ["unproven"]
-version = "0.2.0"
+version = "0.2.1"
 
 [dev-dependencies]
+<<<<<<< HEAD
 # cortex-m-rtfm = "0.3.2"
 cortex-m-semihosting = "0.2.0"
+=======
+panic-semihosting = "0.5.0"
+panic-itm = "0.4.0"
+# cortex-m-rtfm = "0.3.1"
+cortex-m-semihosting = "0.3.0"
+>>>>>>> refs/remotes/japaric/master
 enc28j60 = "0.2.0"
 heapless = "0.3.1"
 m = "0.1.1"

@@ -24,8 +24,8 @@
 //!
 //! - Building an application (binary crate)
 //!
-//! Follow the [cortex-m-quickstart] instructions and add this crate as a dependency in step number
-//! 5 and make sure you enable the "rt" Cargo feature of this crate.
+//! Follow the [cortex-m-quickstart] instructions and add this crate as a dependency
+//! and make sure you enable the "rt" Cargo feature of this crate.
 //!
 //! [cortex-m-quickstart]: https://docs.rs/cortex-m-quickstart/~0.2.3
 //!
@@ -36,13 +36,14 @@
 //! [examples]: examples/index.html
 
 #![no_std]
+#![feature(never_type)]
 
 extern crate cast;
 extern crate cortex_m;
 extern crate embedded_hal as hal;
 extern crate nb;
-extern crate void;
 pub extern crate stm32f103xx;
+extern crate void;
 
 pub mod afio;
 pub mod bb;
@@ -62,3 +63,4 @@ pub mod serial;
 pub mod spi;
 pub mod time;
 pub mod timer;
+pub mod watchdog;

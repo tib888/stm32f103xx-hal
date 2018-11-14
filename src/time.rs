@@ -4,6 +4,26 @@ use cortex_m::peripheral::DWT;
 
 use rcc::Clocks;
 
+/// Microseconds
+#[derive(Clone, Copy)]
+pub struct Microseconds(pub u32);
+
+/// Milliseconds
+#[derive(Clone, Copy)]
+pub struct Milliseconds(pub u32);
+
+/// Seconds
+#[derive(Clone, Copy)]
+pub struct Seconds(pub u32);
+
+/// Minutes
+#[derive(Clone, Copy)]
+pub struct Minutes(pub u32);
+
+/// Hours
+#[derive(Clone, Copy)]
+pub struct Hours(pub u32);
+
 /// Bits per second
 #[derive(Clone, Copy)]
 pub struct Bps(pub u32);
@@ -33,6 +53,15 @@ pub trait U32Ext {
 
     /// Wrap in `MegaHertz`
     fn mhz(self) -> MegaHertz;
+
+    /// Wrap in `Seconds`
+    fn s(self) -> Seconds;
+
+    /// Wrap in `Milliseconds`
+    fn ms(self) -> Milliseconds;
+
+    /// Wrap in `Microseconds`
+    fn us(self) -> Microseconds;
 }
 
 impl U32Ext for u32 {
@@ -51,6 +80,18 @@ impl U32Ext for u32 {
     fn mhz(self) -> MegaHertz {
         MegaHertz(self)
     }
+
+    fn s(self) -> Seconds {
+        Seconds(self)
+    }
+
+    fn ms(self) -> Milliseconds {
+        Milliseconds(self)
+    }
+
+    fn us(self) -> Microseconds {
+        Microseconds(self)
+    }
 }
 
 impl Into<Hertz> for KiloHertz {
@@ -68,6 +109,42 @@ impl Into<Hertz> for MegaHertz {
 impl Into<KiloHertz> for MegaHertz {
     fn into(self) -> KiloHertz {
         KiloHertz(self.0 * 1_000)
+    }
+}
+
+impl Into<Microseconds> for Seconds {
+    fn into(self) -> Microseconds {
+        Microseconds(self.0 * 1_000_000)
+    }
+}
+
+impl Into<Milliseconds> for Seconds {
+    fn into(self) -> Milliseconds {
+        Milliseconds(self.0 * 1_000)
+    }
+}
+
+impl Into<Microseconds> for Milliseconds {
+    fn into(self) -> Microseconds {
+        Microseconds(self.0 * 1_000)
+    }
+}
+
+impl Into<Seconds> for Minutes {
+    fn into(self) -> Seconds {
+        Seconds(self.0 * 60)
+    }
+}
+
+impl Into<Seconds> for Hours {
+    fn into(self) -> Seconds {
+        Seconds(self.0 * 3600)
+    }
+}
+
+impl Into<Minutes> for Hours {
+    fn into(self) -> Minutes {
+        Minutes(self.0 * 60)
     }
 }
 

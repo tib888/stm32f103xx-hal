@@ -357,7 +357,7 @@ impl<PINS> Can<CAN, PINS> {
     }
 
     /// moves from Sleep or Normal to Initialization mode
-    fn to_initialization(&mut self) -> nb::Result<(), !> {
+    fn to_initialization(&mut self) -> nb::Result<(), ()> {
         let msr = self.can.can_msr.read();
         if msr.slak().bit_is_set() || msr.inak().bit_is_clear() {
             // request exit from sleep and enter initialization modes
@@ -436,7 +436,7 @@ impl<PINS> Can<CAN, PINS> {
     }
 
     /// moves from Sleep to Normal mode
-    pub fn to_normal(&mut self) -> nb::Result<(), !> {
+    pub fn to_normal(&mut self) -> nb::Result<(), ()> {
         let msr = self.can.can_msr.read();
         if msr.slak().bit_is_set() || msr.inak().bit_is_set() {
             // request exit from both sleep and initialization modes
@@ -450,7 +450,7 @@ impl<PINS> Can<CAN, PINS> {
     }
 
     /// moves from Normal to Sleep mode
-    pub fn to_sleep(&mut self) -> nb::Result<(), !> {
+    pub fn to_sleep(&mut self) -> nb::Result<(), ()> {
         let msr = self.can.can_msr.read();
         if msr.slak().bit_is_clear() || msr.inak().bit_is_set() {
             // request exit from both sleep and initialization modes
@@ -855,7 +855,7 @@ pub trait ReceiveFifo {
     fn has_overun(&self) -> bool;
     fn is_full(&self) -> bool;
     fn pending_count(&self) -> u8;
-    fn read(&mut self) -> nb::Result<(FilterMatchIndex, TimeStamp, Frame), !>;
+    fn read(&mut self) -> nb::Result<(FilterMatchIndex, TimeStamp, Frame), ()>;
 }
 
 pub struct RxFifo<CAN, IDX> {
@@ -888,7 +888,7 @@ macro_rules! RxFifo {
                      unsafe { (*$CANX::ptr()).$can_rfir.read().$fmpi().bits() }
                 }
 
-                fn read(&mut self) -> nb::Result<(FilterMatchIndex, TimeStamp, Frame), !> {
+                fn read(&mut self) -> nb::Result<(FilterMatchIndex, TimeStamp, Frame), ()> {
                     let n = self.pending_count();
                     if n < 1 {
                         //there are no messages in the fifo

@@ -23,6 +23,7 @@ default-features = false
 version = "0.2.2"
 
 [dependencies.embedded-hal]
+git = "https://github.com/rust-embedded/embedded-hal"
 features = ["unproven"]
 version = "0.2.1"
 

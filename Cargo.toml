@@ -23,7 +23,6 @@ default-features = false
 version = "0.2.2"
 
 [dependencies.embedded-hal]
-git = "https://github.com/rust-embedded/embedded-hal"
 features = ["unproven"]
 version = "0.2.1"
 
@@ -33,7 +32,7 @@ panic-itm = "0.4.0"
 # cortex-m-rtfm = "0.3.1"
 cortex-m-semihosting = "0.3.0"
 enc28j60 = "0.2.0"
-heapless = "0.3.1"
+# heapless = "0.3.1"
 m = "0.1.1"
 mfrc522 = "0.2.0"
 
@@ -66,17 +65,19 @@ git = "https://github.com/japaric/motor-driver"
 rev = "00c8b15223643090d69f1acfb8b7a7a43a440417"
 
 [dev-dependencies.mpu9250]
-version = "0.6.3"
+git = "https://github.com/japaric/mpu9250"
+rev = "8f9ecad690093cb71c41301ca5e5705706150610"
 
 [dev-dependencies.serde]
 default-features = false
-version = "1.0.78"
+version = "1.0.33"
 
 [dev-dependencies.serde_derive]
-version = "1.0.78"
+version = "1.0.33"
 
-[dev-dependencies.serde-json-core]
-version = "0.0.1"
+# [dev-dependencies.serde-json-core]
+# git = "https://github.com/japaric/serde-json-core"
+# rev = "6f12b77c1ffeae167989fe06e0d8b15978bd6d18"
 
 [dev-dependencies.stm32f103xx]
 features = ["rt"]

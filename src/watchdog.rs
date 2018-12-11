@@ -1,7 +1,6 @@
-use hal::watchdog::{Watchdog, /*WatchdogDisable,*/ WatchdogEnable};
-//use stm32f103xx::iwdg::*;
+use crate::hal::watchdog::{Watchdog, /*WatchdogDisable,*/ WatchdogEnable};
+use crate::time::Microseconds;
 use stm32f103xx::IWDG;
-use time::Microseconds;
 
 /// The independent watchdog is based on a 12-bit downcounter and 8-bit prescaler. It is
 /// clocked from an independent 40 kHz internal RC and as it operates independently of the

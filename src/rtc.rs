@@ -1,6 +1,6 @@
 //! Real time clock
 
-use rcc::APB1;
+use crate::rcc::APB1;
 use stm32f103xx as device;
 
 pub struct Rtc {

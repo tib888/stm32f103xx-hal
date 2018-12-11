@@ -1,8 +1,9 @@
 //! Time units
 
 use cortex_m::peripheral::DWT;
+use cortex_m::peripheral::DCB;
 
-use rcc::Clocks;
+use crate::rcc::Clocks;
 
 /// Microseconds
 #[derive(Clone, Copy)]
@@ -148,6 +149,18 @@ impl Into<Minutes> for Hours {
     }
 }
 
+/// A token that can be passed around and guarantees
+/// that trace is enabled
+#[derive(Copy, Clone)]
+pub struct TraceEnabled {
+    _0: (),
+}
+
+pub fn enable_trace(mut dcb: DCB) -> TraceEnabled {
+    dcb.enable_trace();
+    TraceEnabled { _0: () }
+}
+
 /// A monotonic nondecreasing timer
 #[derive(Clone, Copy)]
 pub struct MonoTimer {
@@ -156,7 +169,7 @@ pub struct MonoTimer {
 
 impl MonoTimer {
     /// Creates a new `Monotonic` timer
-    pub fn new(mut dwt: DWT, clocks: Clocks) -> Self {
+    pub fn new(mut dwt: DWT, _trace_enabled: TraceEnabled, clocks: Clocks) -> Self {
         dwt.enable_cycle_counter();
 
         // now the CYCCNT counter can't be stopped or resetted

@@ -8,14 +8,16 @@
 //! - RX = PA11 | PB8
 //! - Interrupt = CAN1
 
-use afio::MAPR;
 use core::marker::PhantomData;
 use core::ptr;
-use gpio::gpioa::{PA11, PA12};
-use gpio::gpiob::{PB8, PB9};
-use gpio::{Alternate, Floating, Input, PushPull};
+use crate::afio::MAPR;
+use crate::gpio::{
+    gpioa::{PA11, PA12},
+    gpiob::{PB8, PB9},
+    Alternate, Floating, Input, PushPull,
+};
+use crate::rcc::APB1;
 use nb;
-use rcc::APB1;
 use stm32f103xx::{CAN, USB};
 
 #[derive(Clone, PartialEq, PartialOrd, Eq, Ord)]

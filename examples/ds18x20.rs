@@ -25,8 +25,7 @@ use sh::hio;
 use onewire::ds18x20::*;
 use onewire::*;
 
-entry!(main);
-
+#[entry]
 fn main() -> ! {
     let mut hstdout = hio::hstdout().unwrap();
 
@@ -69,7 +68,7 @@ fn main() -> ! {
                         let temperature = one_wire.read_temperature_measurement_result(&rom);
                         match temperature {
                             Ok(t) => {
-                                writeln!(hstdout, "T = {} + {}/16 C", t >> 4, t & 0xF).unwrap()
+                                writeln!(hstdout, "T = {} + {}/16 C", t.0 >> 4, t.0 & 0xF).unwrap()
                             }
                             Err(code) => writeln!(hstdout, "Error: {:?}", code).unwrap(),
                         }
@@ -93,14 +92,12 @@ fn main() -> ! {
     }
 }
 
-exception!(HardFault, hard_fault);
-
-fn hard_fault(ef: &ExceptionFrame) -> ! {
+#[exception]
+fn HardFault(ef: &ExceptionFrame) -> ! {
     panic!("{:#?}", ef);
 }
 
-exception!(*, default_handler);
-
-fn default_handler(irqn: i16) {
+#[exception]
+fn DefaultHandler(irqn: i16) {
     panic!("Unhandled exception (IRQn = {})", irqn);
 }

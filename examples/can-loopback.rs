@@ -2,7 +2,6 @@
 //#![deny(warnings)]
 #![no_std]
 #![no_main]
-#![feature(use_extern_macros)]
 
 extern crate cortex_m;
 #[macro_use]
@@ -21,8 +20,7 @@ use hal::can::*;
 use core::fmt::Write;
 use sh::hio;
 
-entry!(main);
-
+#[entry]
 fn main() -> ! {
     let config = Configuration {
         time_triggered_communication_mode: false,
@@ -165,14 +163,12 @@ fn main() -> ! {
     //writeln!(hstdout, "done.").unwrap();
 }
 
-exception!(HardFault, hard_fault);
-
-fn hard_fault(ef: &ExceptionFrame) -> ! {
+#[exception]
+fn HardFault(ef: &ExceptionFrame) -> ! {
     panic!("{:#?}", ef);
 }
 
-exception!(*, default_handler);
-
-fn default_handler(irqn: i16) {
+#[exception]
+fn DefaultHandler(irqn: i16) {
     panic!("Unhandled exception (IRQn = {})", irqn);
 }

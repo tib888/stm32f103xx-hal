@@ -36,7 +36,6 @@
 //! [examples]: examples/index.html
 
 #![no_std]
-#![feature(never_type)]
 
 use embedded_hal as hal;
 

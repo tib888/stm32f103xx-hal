@@ -1,4 +1,4 @@
-use crate::hal::watchdog::{Watchdog, /*WatchdogDisable,*/ WatchdogEnable};
+use embedded_hal::watchdog::{Watchdog, /*WatchdogDisable,*/ WatchdogEnable};
 use crate::time::Microseconds;
 use stm32f103xx::IWDG;
 

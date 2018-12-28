@@ -26,13 +26,13 @@ impl Rtc {
         rcc.bdcr.modify(|_, w| w.lsebyp().clear_bit());
         rcc.bdcr.modify(|_, w| w.lseon().set_bit());
         while rcc.bdcr.read().lserdy().bit_is_clear() {}
-        rcc.bdcr.modify(|_, w| w.rtcsel().lse());
+        rcc.bdcr.modify(|_, w| w.rtcsel().lse());   //assumes external oscillator
 
         // enable RTC
         rcc.bdcr.modify(|_, w| w.rtcen().set_bit());
 
         // setting freq
-        let freq = 32768;
+        let freq = 32768;                           //assumes this oscillator frequency
         let prl = freq - 1;
         assert!(prl < 1 << 20);
         rtc.modify(|s| {

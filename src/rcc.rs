@@ -25,6 +25,7 @@ impl RccExt for RCC {
                 pclk1: None,
                 pclk2: None,
                 sysclk: None,
+                adcclk: None,
             },
         }
     }
@@ -95,6 +96,7 @@ pub struct CFGR {
     pclk1: Option<u32>,
     pclk2: Option<u32>,
     sysclk: Option<u32>,
+    adcclk: Option<u32>,
 }
 
 impl CFGR {
@@ -109,6 +111,7 @@ impl CFGR {
     }
 
     /// Sets the desired frequency for the HCLK clock
+    /// must be <= 72MHz
     pub fn hclk<F>(mut self, freq: F) -> Self
     where
         F: Into<Hertz>,
@@ -118,6 +121,7 @@ impl CFGR {
     }
 
     /// Sets the desired frequency for the PCKL1 clock
+    /// must be <= 36MHz
     pub fn pclk1<F>(mut self, freq: F) -> Self
     where
         F: Into<Hertz>,
@@ -127,6 +131,7 @@ impl CFGR {
     }
 
     /// Sets the desired frequency for the PCLK2 clock
+    /// must be <= 72MHz
     pub fn pclk2<F>(mut self, freq: F) -> Self
     where
         F: Into<Hertz>,
@@ -136,6 +141,7 @@ impl CFGR {
     }
 
     /// Sets the desired frequency for the SYSCLK clock
+    /// must be <= 72MHz
     pub fn sysclk<F>(mut self, freq: F) -> Self
     where
         F: Into<Hertz>,
@@ -144,9 +150,17 @@ impl CFGR {
         self
     }
 
-    pub fn freeze(self, acr: &mut ACR) -> Clocks {
-        // TODO ADC clock
+    /// Sets the desired frequency for the ADC clock
+    /// must be <= 14MHz
+    pub fn adcclk<F>(mut self, freq: F) -> Self
+    where
+        F: Into<Hertz>,
+    {
+        self.adcclk = Some(freq.into().0);
+        self
+    }
 
+    pub fn freeze(self, acr: &mut ACR) -> Clocks {
         let pllsrcclk = self.hse.unwrap_or(HSI / 2);
 
         let pllmul = self.sysclk.unwrap_or(pllsrcclk) / pllsrcclk;
@@ -210,6 +224,16 @@ impl CFGR {
         let pclk2 = hclk / u32(ppre2);
 
         assert!(pclk2 <= 72_000_000);
+
+        let adcpre_bits = match pclk2 / (self.adcclk.unwrap_or(14_000_000) + 1) {
+                0...1 => 0b00,
+                2...3 => 0b01,
+                4...5 => 0b10,
+                _ => 0b11,
+            };
+            
+        let adcclk = (pclk2 >> 1) / u32(adcpre_bits + 1);
+        assert!(adcclk <= 14_000_000);
 
         // adjust flash wait states
         unsafe {
@@ -279,6 +303,8 @@ impl CFGR {
                 } else {
                     SWW::HSI
                 })
+                .adcpre()
+                .bits(adcpre_bits)
         });
 
         Clocks {
@@ -289,6 +315,7 @@ impl CFGR {
             ppre2,
             sysclk: Hertz(sysclk),
             usbclk_valid,
+            adcclk: Hertz(adcclk)
         }
     }
 }
@@ -305,6 +332,7 @@ pub struct Clocks {
     ppre2: u8,
     sysclk: Hertz,
     usbclk_valid: bool,
+    adcclk: Hertz,
 }
 
 impl Clocks {
@@ -342,4 +370,10 @@ impl Clocks {
     pub fn usbclk_valid(&self) -> bool {
         self.usbclk_valid
     }
+
+    /// Returns the ADC frequency
+    pub fn adcclk(&self) -> Hertz {
+        self.adcclk
+    }
+
 }

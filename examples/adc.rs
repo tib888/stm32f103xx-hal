@@ -6,11 +6,12 @@
 
 #[macro_use]
 extern crate cortex_m_rt as rt;
-#[macro_use]
 extern crate cortex_m;
 extern crate cortex_m_semihosting;
 extern crate panic_semihosting;
 extern crate stm32f103xx_hal;
+
+use nb::block;
 
 use core::fmt::Write;
 
@@ -19,7 +20,8 @@ use cortex_m_semihosting::hio;
 use stm32f103xx_hal::prelude::*;
 
 use rt::ExceptionFrame;
-use stm32f103xx_hal::adc::{self, AnalogPin};
+use stm32f103xx_hal::adc::{self};
+use embedded_hal::adc::OneShot;
 
 #[entry]
 fn main() -> ! {
@@ -33,14 +35,16 @@ fn main() -> ! {
 
     // Configure gpioa 0 as an analog input
     let mut gpiob = p.GPIOB.split(&mut rcc.apb2);
-    let pb1 = gpiob.pb1.into_analog_input(&mut gpiob.crl);
+    let mut pb1 = gpiob.pb1.into_analog_input(&mut gpiob.crl);
 
     loop {
         // Aquire stdout and print the result of an analog reading
         // NOTE: This will probably freeze when running without a debugger connected.
+
+        let reading = block!(adc.read(&mut pb1)).unwrap();
         hio::hstdout().map(|mut hio| {
-            writeln!(hio, "reading: {}", pb1.analog_read(&mut adc))
-        });
+            writeln!(hio, "reading: {}", reading).unwrap()
+        }).unwrap();
     }
 }
 

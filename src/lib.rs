@@ -44,6 +44,7 @@ pub use stm32f103xx;
 #[cfg(feature="stm32f103")]
 pub use stm32f103xx as device;
 
+pub mod adc;
 pub mod afio;
 pub mod bb;
 pub mod can;

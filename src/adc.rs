@@ -10,6 +10,7 @@ use crate::gpio::gpioa::*;
 use crate::gpio::gpiob::*;
 
 use crate::rcc::APB2;
+use crate::rcc::Clocks;
 
 pub struct Adc<ADC> {
     adc: ADC
@@ -25,40 +26,40 @@ macro_rules! hal {
     )+) => {
         $(
             impl Adc<$ADC> {
-                /**
-                  Powers up $ADC and blocks until it's ready
-                */
-                pub fn $init(adc: $ADC, apb2: &mut APB2) -> Self {
+                /// Powers up $ADC and blocks until it's ready
+                pub fn $init(adc: $ADC, apb2: &mut APB2, clocks: &Clocks) -> Self {
+                    assert!(clocks.adcclk().0 <= 14_000_000);
+
                     // Reset and enable the ADC peripheral
                     apb2.rstr().modify(|_, w| w.$adcxrst().set_bit());
                     apb2.rstr().modify(|_, w| w.$adcxrst().clear_bit());
                     apb2.enr().modify(|_, w| w.$adcxen().set_bit());
-
 
                     adc.cr2.modify(|_, w| { w.cont().clear_bit()});
 
                     adc.cr2.modify(|_, w| { w.adon().set_bit()});
 
                     // Wait for the ADC to be ready
-                    while adc.cr2.read().adon().bit_is_set() == false
-                        {}
+                    while adc.cr2.read().adon().bit_is_clear() {}
 
                     // Set the sequence length to 1
                     // Amount of conversions n-1
 
-                    unsafe{adc.sqr1.modify(|_, w| w.l().bits(0))}
+                    unsafe { 
+                        adc.sqr1.modify(|_, w| w.l().bits(0))
+                    };
                     Self {
                         adc
                     }
                 }
 
-                /**
-                  Make a single reading of the specified channel
-                */
+                /// Make a single reading of the specified channel
                 fn read_raw(&mut self, channel: u8) -> nb::Result<u16, Void> {
                     // Select the channel to be converted
                     // NOTE: Unsafe write of u8 to 4 bit register. Will this cause issues?
-                    unsafe{self.adc.sqr3.modify(|_, w| w.sq1().bits(channel))};
+                    unsafe {
+                        self.adc.sqr3.modify(|_, w| w.sq1().bits(channel))
+                    };
                     // Set ADON
                     // self.adc.cr2.modify(|_, w| w.swstart().set_bit());
                     self.adc.cr2.modify(|_, w| { w.adon().set_bit()});
@@ -91,7 +92,6 @@ macro_rules! hal {
         )+
     }
 }
-
 
 macro_rules! analog_pin_impls {
     ($($adc:ty: ($($pin:ident: $channel:expr),+)),+) =>

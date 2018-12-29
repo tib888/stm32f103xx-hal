@@ -1,7 +1,7 @@
 use core::cmp;
 
 use cast::u32;
-use crate::device::rcc::cfgr::{PLLSRCW, SWW, USBPREW, ADCPREW};
+use crate::device::rcc::cfgr::{PLLSRCW, SWW, USBPREW};
 use crate::device::{rcc, RCC};
 
 use crate::flash::ACR;
